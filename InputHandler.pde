@@ -43,6 +43,7 @@ KinectPV2 kinect;
 
 float lastXPos = 0;
 float lastYPos = 0;
+LStateController leftHandController;
 
 final float MAX_MOUSE_DISTANCE = 50;
 
@@ -51,8 +52,9 @@ void setup() {
 
   kinect = new KinectPV2(this);
   
+  leftHandController = new LStateController();
   
-
+ 
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
 
@@ -165,8 +167,22 @@ void pressKeys(KJoint left, KJoint right) {
     int leftHandState = left.getState();
     int rightHandState = right.getState();
     
+    /*
     if (leftHandState == KinectPV2.HandState_Closed) {
       toggleOSK();
+    }
+    */
+    
+    if (leftHandState == KinectPV2.HandState_Open) {
+      leftHandController.open();
+    }
+    
+    else if (leftHandState == KinectPV2.HandState_Closed) {
+      leftHandController.closed();
+    } 
+    
+    else if (leftHandState == KinectPV2.HandState_Lasso) {
+      leftHandController.lasso();
     }
     
     

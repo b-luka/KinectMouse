@@ -44,6 +44,21 @@ KinectPV2 kinect;
 float lastXPos = 0;
 float lastYPos = 0;
 LStateController leftHandController;
+RStateController rightHandController;
+
+final float MIN_SCREEN_WIDTH = 0;
+final float MAX_SCREEN_WIDTH = displayWidth;
+final float MIN_SCREEN_HEIGHT = 0;
+final float MAX_SCREEN_HEIGHT = displayHeight;
+
+final float SKETCH_WIDTH = displayWidth / 4;
+final float SKETCH_HEIGHT = displayHeight / 4;
+
+float MIN_MAP_WIDTH = 400;    // TODO: citanje iz fajla, poseban sketch za konfiguraciju i kalibraciju
+float MAX_MAP_WIDTH = 1520;
+float MIN_MAP_HEIGHT = 200;
+float MAX_MAP_HEIGHT = 480;
+
 
 final float MAX_MOUSE_DISTANCE = 50;
 
@@ -53,6 +68,7 @@ void setup() {
   kinect = new KinectPV2(this);
   
   leftHandController = new LStateController();
+  rightHandController = new RStateController();
   
  
   kinect.enableSkeletonColorMap(true);
@@ -128,13 +144,24 @@ void moveMouse(KJoint[] joints) {
     //xpos = map(xpos, 240, 1680, 0, 2560);
     //ypos = map(ypos, 240, 840, 0, 1440);
     
-    xpos = map(xpos, 400, 1520, 0, 1024);
-    ypos = map(ypos, 200, 480, 0, 768);
+    /*    // TODO: mis se zaglavi u (0, 0)
+    xpos = map(xpos, MIN_MAP_WIDTH, MAX_MAP_WIDTH, MIN_SCREEN_WIDTH, MAX_SCREEN_WIDTH);    // mapiranje koordinata kamere
+    ypos = map(ypos, MIN_MAP_HEIGHT, MAX_MAP_HEIGHT, MIN_SCREEN_HEIGHT, MAX_SCREEN_HEIGHT);// (1080p slika) na ekran promenljive rezolucije
     
     
-    if (xpos > 1024) xpos = 1024;
+    
+    if (xpos > MAX_SCREEN_WIDTH) xpos = MAX_SCREEN_WIDTH;    // odrzavanje u granicama ekrana
+    if (xpos < MIN_SCREEN_WIDTH) xpos = MIN_SCREEN_WIDTH;
+    if (ypos > MAX_SCREEN_HEIGHT) ypos = MAX_SCREEN_HEIGHT;
+    if (ypos < MIN_SCREEN_HEIGHT) ypos = MIN_SCREEN_HEIGHT;
+    */
+    
+    xpos = map(xpos, 240, 1680, 0, 2560);
+    ypos = map(ypos, 240, 840, 0, 1440);
+    
+    if (xpos > 2560) xpos = 2560;
     if (xpos < 0) xpos = 0;
-    if (ypos > 768) ypos = 768;
+    if (ypos > 1440) ypos = 1440;
     if (ypos < 0) ypos = 0;
   
     float mouseDistance = sqrt(((xpos - lastXPos) * (xpos - lastXPos)) + ((ypos - lastYPos) * (ypos * lastYPos)));
@@ -173,6 +200,35 @@ void pressKeys(KJoint left, KJoint right) {
     }
     */
     
+    switch (leftHandState) {            // proverava stanje ruke i u odnosu na dato stanje
+      case KinectPV2.HandState_Open:    // i poziva funkciju, prelaz stanja i poziv funkcija misa iz C++ - a
+        leftHandController.open();
+        break;
+      
+      case KinectPV2.HandState_Closed:
+        leftHandController.closed();
+        break;
+        
+      case KinectPV2.HandState_Lasso:
+        leftHandController.lasso();
+        break;
+    }
+    
+    switch (rightHandState) {
+      case KinectPV2.HandState_Open:
+        rightHandController.open();
+        break;
+      
+      case KinectPV2.HandState_Closed:
+        rightHandController.closed();
+        break;
+        
+      case KinectPV2.HandState_Lasso:
+        rightHandController.lasso();
+        break;
+    }
+    
+    /*
     if (leftHandState == KinectPV2.HandState_Open) {
       leftHandController.open();
     }
@@ -184,7 +240,7 @@ void pressKeys(KJoint left, KJoint right) {
     else if (leftHandState == KinectPV2.HandState_Lasso) {
       leftHandController.lasso();
     }
-    
+    */
     
     
     

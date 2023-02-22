@@ -7,20 +7,20 @@ public class LOpenState implements LHandState {
   }
   
   @Override
-  void open() {
+  void open() {    // open -> open
     println("L1");
     ;
   }
   
   @Override
-  void closed() {
+  void closed() {  // open -> closed, LMB down
     println("L2");
     leftClickDown();
     lStateController.setState(lStateController.closed);
   }
   
   @Override
-  void lasso() {
+  void lasso() {   // open -> lasso, state update
     println("L3");
     lStateController.setState(lStateController.lasso);
     //toggleOSK();

@@ -9,14 +9,12 @@ public class LLassoState implements LHandState {
   @Override
   void open() {    // lasso -> open, toggle OSK
     println("L1");
-    toggleOSK();
     lStateController.setState(lStateController.open);
   }
   
   @Override
-  void closed() {  // lasso -> closed, toggle OSK
+  void closed() {  // lasso -> closed
     println("L2");
-    toggleOSK();
     lStateController.setState(lStateController.closed);
   }
   

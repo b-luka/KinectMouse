@@ -22,6 +22,8 @@ import KinectPV2.*;
   public native void rightClickDown();
   public native void middleClickUp();
   public native void middleClickDown();
+  public native void scrollUp();
+  public native void scrollDown();
   
   
 //}
@@ -62,6 +64,11 @@ float MAX_MAP_HEIGHT = 480;
 
 final float MAX_MOUSE_DISTANCE = 50;
 
+float lastXPosR = 0;
+float lastYPosR = 0;
+float currentXPosR = 0;
+float currentYPosR = 0;
+
 void setup() {
   size(800, 600, P3D);
 
@@ -92,7 +99,6 @@ void draw() {
 
       color col  = skeleton.getIndexColor();
       fill(col);
-      stroke(col);
       //  drawBody(joints);
       
       //draw different color for each hand state
@@ -103,7 +109,9 @@ void draw() {
       moveMouse(joints);
       pressKeys(joints[KinectPV2.JointType_HandLeft], joints[KinectPV2.JointType_HandRight]);
       
-      
+      currentXPosR = joints[KinectPV2.JointType_HandRight].getX();
+      currentYPosR = joints[KinectPV2.JointType_HandRight].getY();
+      rightHandController.mouseScroll();
     }
   }
   

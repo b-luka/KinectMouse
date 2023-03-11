@@ -20,9 +20,10 @@ public class RClosedState implements RHandState {
   }
   
   @Override
-  void lasso() {   // closed -> lasso, RMB up
+  void lasso() {   // closed -> lasso, RMB up, MBM down
     println("R3");
     rightClickUp();
+    middleClickDown();
     rStateController.setState(rStateController.lasso);
     //toggleOSK();
   }

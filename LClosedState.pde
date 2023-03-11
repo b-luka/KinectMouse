@@ -20,10 +20,10 @@ public class LClosedState implements LHandState {
   }
   
   @Override
-  void lasso() {  // closed -> lasso, LMB up
+  void lasso() {  // closed -> lasso, LMB up, toggle OSK
     println("L3");
     leftClickUp();
+    toggleOSK();
     lStateController.setState(lStateController.lasso);
-    //toggleOSK();
   }
 }

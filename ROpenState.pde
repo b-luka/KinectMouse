@@ -20,8 +20,9 @@ public class ROpenState implements RHandState {
   }
   
   @Override
-  void lasso() {  // open -> lasso, TODO
+  void lasso() {  // open -> lasso, MBM down
     println("R3");
+    middleClickDown();
     rStateController.setState(rStateController.lasso);
     //toggleOSK();
   }

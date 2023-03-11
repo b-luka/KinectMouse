@@ -157,7 +157,7 @@ extern "C"
         mouseInput.type = INPUT_MOUSE;
         mouseInput.mi.dwFlags = MOUSEEVENTF_WHEEL;
         mouseInput.mi.time = NULL;
-        mouseInput.mi.mouseData = (DWORD)1;
+        mouseInput.mi.mouseData = (DWORD)50;
         mouseInput.mi.dx = pos.x;
         mouseInput.mi.dy = pos.y;
 
@@ -178,7 +178,7 @@ extern "C"
         mouseInput.type = INPUT_MOUSE;
         mouseInput.mi.dwFlags = MOUSEEVENTF_WHEEL;
         mouseInput.mi.time = NULL;
-        mouseInput.mi.mouseData = (DWORD)(-1);
+        mouseInput.mi.mouseData = (DWORD)(-50);
         mouseInput.mi.dx = pos.x;
         mouseInput.mi.dy = pos.y;
 

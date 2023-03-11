@@ -29,4 +29,16 @@ public class RStateController {
   void lasso() {
     rState.lasso();
   }
+  
+  void mouseScroll() {
+    if ((currentYPosR - lastYPosR) >= 20) {
+      scrollDown();
+    } else if ((currentYPosR - lastYPosR) <= -20){
+      scrollUp();
+    }
+    
+    lastXPosR = currentXPosR;
+    lastYPosR = currentYPosR;
+    
+  }
 }

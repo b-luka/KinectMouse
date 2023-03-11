@@ -7,16 +7,16 @@ public class RLassoState implements RHandState {
   }
   
   @Override
-  void open() {    // lasso -> open, TODO
+  void open() {    // lasso -> open, MBM up
     println("R1");
-    ;
+    middleClickUp();
     rStateController.setState(rStateController.open);
   }
   
   @Override
-  void closed() {  // lasso -> closed, TODO
+  void closed() {  // lasso -> closed, MBM up
     println("R2");
-    ;
+    middleClickUp();
     rStateController.setState(rStateController.closed);
   }
   

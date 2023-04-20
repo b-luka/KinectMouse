@@ -18,7 +18,7 @@ final int WINDOW_WIDTH = displayWidth / 2;
 final int WINDOW_HEIGHT = displayHeight / 2;
 int configPhase = 0;
 
-int minWidth, maxWidth, minHeight, maxHeight;
+int minWidth, maxWidth, minHeight, maxHeight, dominantHand, nondominantHand;
 
 
 void settings() {
@@ -139,11 +139,55 @@ void draw() {
   text(frameRate, 50, 50);
   }
   
+  else if (configPhase == 2) {
+  background(0);
+
+  image(kinect.getColorImage(), 0, 0, width, height);
   
-  else if (configPhase == 2) {  // gotov setup, zapisivanje u fajl i izlaz
+  fill(0, 0, 0, 200);
+  rectMode(CORNER);
+  noStroke();
+  rect(0, 0, width, height);
+  
+
+  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+
+  //individual JOINTS
+  for (int i = 0; i < skeletonArray.size(); i++) {
+    KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
+    if (skeleton.isTracked()) {
+      KJoint[] joints = skeleton.getJoints();
+
+      color col  = skeleton.getIndexColor();
+      fill(col);
+      stroke(col);
+      drawBody(joints);
+      
+      text("Lasso the hand you want to use to track the mouse", 0, height - 50);
+      
+
+      //draw different color for each hand state
+      drawHandState(joints[KinectPV2.JointType_HandRight]);
+      drawHandState(joints[KinectPV2.JointType_HandLeft]);
+      
+      if (joints[KinectPV2.JointType_HandLeft].getState() == KinectPV2.HandState_Lasso) {
+        dominantHand = KinectPV2.JointType_HandLeft;
+        nondominantHand = KinectPV2.JointType_HandRight;
+        configPhase = 3;
+      } else if (joints[KinectPV2.JointType_HandRight].getState() == KinectPV2.HandState_Lasso)
+        dominantHand = KinectPV2.JointType_HandRight;
+        nondominantHand = KinectPV2.JointType_HandLeft;
+        configPhase = 3;
+      }
+    }
+  }
+  
+  else if (configPhase == 3) {  // gotov setup, zapisivanje u fajl i izlaz
     
     println("writing . . .");
     try {
+      writer.println("DOMINANT_HAND: " + dominantHand);
+      writer.println("NONDOMINANT_HAND: " + nondominantHand);
       writer.println("MIN_TRACKING_WIDTH: " + minWidth);
       writer.println("MIN_TRACKING_WIDTH: " + maxWidth);
       writer.println("MIN_TRACKING_HEIGHT: " + minHeight);
@@ -157,6 +201,8 @@ void draw() {
       e.printStackTrace();
     }
   }
+  
+  
 }
 
 //DRAW BODY

@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import KinectPV2.KJoint;
 import KinectPV2.*;
+import java.io.*;
 
 //public class InputHandler {
   public native void toggleOSK();
@@ -22,6 +23,8 @@ import KinectPV2.*;
   public native void rightClickDown();
   public native void middleClickUp();
   public native void middleClickDown();
+  public native void scrollUp();
+  public native void scrollDown();
   
   
 //}
@@ -43,18 +46,82 @@ KinectPV2 kinect;
 
 float lastXPos = 0;
 float lastYPos = 0;
+DStateController dominantHand;
+NStateController nondominantHand;
 
-final float MAX_MOUSE_DISTANCE = 50;
+final float MIN_SCREEN_WIDTH = 0;
+final float MAX_SCREEN_WIDTH = displayWidth;
+final float MIN_SCREEN_HEIGHT = 0;
+final float MAX_SCREEN_HEIGHT = displayHeight;
+
+final float SKETCH_WIDTH = displayWidth / 4;
+final float SKETCH_HEIGHT = displayHeight / 4;
+
+int MAX_WIDTH = 2560;
+int MAX_HEIGHT = 1440;
+
+int DOMINANT_HAND = KinectPV2.JointType_HandLeft;
+int NONDOMINANT_HAND = KinectPV2.JointType_HandRight;
+
+int MIN_MAP_WIDTH = 400;    // TODO: citanje iz fajla, poseban sketch za konfiguraciju i kalibraciju
+int MAX_MAP_WIDTH = 1520;
+int MIN_MAP_HEIGHT = 200;
+int MAX_MAP_HEIGHT = 480;
+
+String configPath;
+
+
+//final float MAX_MOUSE_DISTANCE = 50;
+
+float lastXPosR = 0;
+float lastYPosR = 0;
+float currentXPosR = 0;
+float currentYPosR = 0;
+
+void settings() {
+  MAX_WIDTH = displayWidth;
+  MAX_HEIGHT = displayHeight;
+  size(displayWidth / 2, displayHeight / 2, P3D);
+}
 
 void setup() {
-  size(800, 600, P3D);
-
   kinect = new KinectPV2(this);
   
+  dominantHand = new DStateController();
+  nondominantHand = new NStateController();
   
-
+ 
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
+  
+  
+  //String[] lines = loadStrings("C:\\Users\\lukao\\github\\kinectMouse\\config.txt");
+  
+  /*File file = new File("InputHandler.pde");
+  println(file.getAbsolutePath());
+  testSt =file.getAbsolutePath();*/
+  configPath = sketchPath() + "\\config.txt";
+  String[] lines = loadStrings(configPath);
+  
+  DOMINANT_HAND = Integer.valueOf(lines[0].split(": ")[1]);
+  NONDOMINANT_HAND = Integer.valueOf(lines[1].split(": ")[1]);
+  MIN_MAP_WIDTH = Integer.valueOf(lines[2].split(": ")[1]);
+  MAX_MAP_WIDTH = Integer.valueOf(lines[3].split(": ")[1]);
+  MIN_MAP_HEIGHT = Integer.valueOf(lines[4].split(": ")[1]);
+  MAX_MAP_HEIGHT = Integer.valueOf(lines[5].split(": ")[1]);
+  
+       
+  for(String line : lines) {
+    println(line);
+  }
+  
+
+  println(MIN_MAP_WIDTH);
+  println(MAX_MAP_WIDTH);
+  println(MIN_MAP_HEIGHT);
+  println(MAX_MAP_HEIGHT);
+  println(DOMINANT_HAND);
+  println(NONDOMINANT_HAND);
 
   kinect.init();
 }
@@ -64,7 +131,7 @@ void draw() {
 
   image(kinect.getColorImage(), 0, 0, width, height);
 
-  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+  ArrayList<KSkeleton> skeletonArray = kinect.getSkeletonColorMap();
 
   //individual JOINTS
   for (int i = 0; i < skeletonArray.size(); i++) {
@@ -74,18 +141,19 @@ void draw() {
 
       color col  = skeleton.getIndexColor();
       fill(col);
-      stroke(col);
-      //  drawBody(joints);
+      drawBody(joints);
       
       //draw different color for each hand state
-      //  drawHandState(joints[KinectPV2.JointType_HandRight]);
+      drawHandState(joints[KinectPV2.JointType_HandRight]);
       drawHandState(joints[KinectPV2.JointType_HandLeft]);
       
-      printXY(joints, KinectPV2.JointType_HandLeft);
+      //printXY(joints, KinectPV2.JointType_HandLeft);
       moveMouse(joints);
-      pressKeys(joints[KinectPV2.JointType_HandLeft], joints[KinectPV2.JointType_HandRight]);
+      pressKeys(joints[DOMINANT_HAND], joints[NONDOMINANT_HAND]);
       
-      
+      currentXPosR = joints[NONDOMINANT_HAND].getX();
+      currentYPosR = joints[DOMINANT_HAND].getY();
+      nondominantHand.mouseScroll();
     }
   }
   
@@ -118,24 +186,38 @@ void draw() {
 void moveMouse(KJoint[] joints) {
   try {
     Robot robot = new Robot();
-    float xpos = joints[KinectPV2.JointType_HandLeft].getX();
-    float ypos = joints[KinectPV2.JointType_HandLeft].getY();
+    float xpos = joints[DOMINANT_HAND].getX();
+    float ypos = joints[DOMINANT_HAND].getY();
     
     //ypos += 270;
     
     //xpos = map(xpos, 240, 1680, 0, 2560);
     //ypos = map(ypos, 240, 840, 0, 1440);
     
-    xpos = map(xpos, 400, 1520, 0, 1024);
-    ypos = map(ypos, 200, 480, 0, 768);
+        // TODO: mis se zaglavi u (0, 0)
+    xpos = map(joints[DOMINANT_HAND].getX(), MIN_MAP_WIDTH, MAX_MAP_WIDTH, 0, MAX_WIDTH);    // mapiranje koordinata kamere
+    ypos = map(joints[DOMINANT_HAND].getY(), MIN_MAP_HEIGHT, MAX_MAP_HEIGHT, 0, MAX_HEIGHT);// (1080p slika) na ekran promenljive rezolucije
     
     
-    if (xpos > 1024) xpos = 1024;
+    /*
+    if (xpos > MAX_SCREEN_WIDTH) xpos = MAX_SCREEN_WIDTH;    // odrzavanje u granicama ekrana
+    if (xpos < MIN_SCREEN_WIDTH) xpos = MIN_SCREEN_WIDTH;
+    if (ypos > MAX_SCREEN_HEIGHT) ypos = MAX_SCREEN_HEIGHT;
+    if (ypos < MIN_SCREEN_HEIGHT) ypos = MIN_SCREEN_HEIGHT;
+    */
+    
+    
+    /*
+    xpos = map(xpos, 240, 1680, 0, 2560);
+    ypos = map(ypos, 240, 840, 0, 1440);
+    
+    if (xpos > 2560) xpos = 2560;
     if (xpos < 0) xpos = 0;
-    if (ypos > 768) ypos = 768;
+    if (ypos > 1440) ypos = 1440;
     if (ypos < 0) ypos = 0;
+    */
   
-    float mouseDistance = sqrt(((xpos - lastXPos) * (xpos - lastXPos)) + ((ypos - lastYPos) * (ypos * lastYPos)));
+    //float mouseDistance = sqrt(((xpos - lastXPos) * (xpos - lastXPos)) + ((ypos - lastYPos) * (ypos * lastYPos)));
     /*
     if (mouseDistance > MAX_MOUSE_DISTANCE) {
       float ratioOfSimilarity = MAX_MOUSE_DISTANCE / mouseDistance;
@@ -158,17 +240,60 @@ void moveMouse(KJoint[] joints) {
   }
 }
 
-void pressKeys(KJoint left, KJoint right) {
+void pressKeys(KJoint dom, KJoint non) {
 
   try {
     Robot robot = new Robot();
-    int leftHandState = left.getState();
-    int rightHandState = right.getState();
+    int domHandState = dom.getState();
+    int nonHandState = non.getState();
     
+    /*
     if (leftHandState == KinectPV2.HandState_Closed) {
       toggleOSK();
     }
+    */
     
+    switch (domHandState) {            // proverava stanje ruke i u odnosu na dato stanje
+      case KinectPV2.HandState_Open:    // i poziva funkciju, prelaz stanja i poziv funkcija misa iz C++ - a
+        dominantHand.open();
+        break;
+      
+      case KinectPV2.HandState_Closed:
+        dominantHand.closed();
+        break;
+        
+      case KinectPV2.HandState_Lasso:
+        dominantHand.lasso();
+        break;
+    }
+    
+    switch (nonHandState) {
+      case KinectPV2.HandState_Open:
+        nondominantHand.open();
+        break;
+      
+      case KinectPV2.HandState_Closed:
+        nondominantHand.closed();
+        break;
+        
+      case KinectPV2.HandState_Lasso:
+        nondominantHand.lasso();
+        break;
+    }
+    
+    /*
+    if (leftHandState == KinectPV2.HandState_Open) {
+      leftHandController.open();
+    }
+    
+    else if (leftHandState == KinectPV2.HandState_Closed) {
+      leftHandController.closed();
+    } 
+    
+    else if (leftHandState == KinectPV2.HandState_Lasso) {
+      leftHandController.lasso();
+    }
+    */
     
     
     
@@ -240,7 +365,7 @@ void drawBody(KJoint[] joints) {
 //draw joint
 void drawJoint(KJoint[] joints, int jointType) {
   pushMatrix();
-  translate(joints[jointType].getX(), joints[jointType].getY(), joints[jointType].getZ());
+  translate(map(joints[jointType].getX(), 0, 1920, 0, width), map(joints[jointType].getY(), 0, 1080, 0, height), joints[jointType].getZ());
   ellipse(0, 0, 25, 25);
   popMatrix();
 }
@@ -248,10 +373,10 @@ void drawJoint(KJoint[] joints, int jointType) {
 //draw bone
 void drawBone(KJoint[] joints, int jointType1, int jointType2) {
   pushMatrix();
-  translate(joints[jointType1].getX(), joints[jointType1].getY(), joints[jointType1].getZ());
+  translate(map(joints[jointType1].getX(), 0, 1920, 0, width), map(joints[jointType1].getY(), 0, 1080, 0, height), joints[jointType1].getZ());
   ellipse(0, 0, 25, 25);
   popMatrix();
-  line(joints[jointType1].getX(), joints[jointType1].getY(), joints[jointType1].getZ(), joints[jointType2].getX(), joints[jointType2].getY(), joints[jointType2].getZ());
+  line(map(joints[jointType1].getX(), 0, 1920, 0, width), map(joints[jointType1].getY(), 0, 1080, 0, height)/*, joints[jointType1].getZ()*/, map(joints[jointType2].getX(), 0, 1920, 0, width), map(joints[jointType2].getY(), 0, 1080, 0, height)/*, joints[jointType2].getZ()*/);
 }
 
 //draw hand state
@@ -259,7 +384,7 @@ void drawHandState(KJoint joint) {
   noStroke();
   handState(joint.getState());
   pushMatrix();
-  translate(joint.getX(), joint.getY(), joint.getZ());
+  translate(map(joint.getX(), 0, 1920, 0, width), map(joint.getY(), 0, 1080, 0, height), joint.getZ());
   ellipse(0, 0, 70, 70);
   popMatrix();
 }
@@ -292,7 +417,6 @@ void keyPressed() {
   try {
   if (key == ' ') {
     System.exit(0);
-    throw new Exception("Shutting down . . .");
     
     }
   } catch (Exception e) {

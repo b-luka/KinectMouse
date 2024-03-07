@@ -147,4 +147,46 @@ extern "C"
         }
     }
 
+    __declspec (dllexport) void __stdcall Java_InputHandler_scrollUp()
+    {
+        INPUT mouseInput;
+        ZeroMemory(&mouseInput, sizeof(mouseInput));
+        POINT pos;
+        GetCursorPos(&pos);
+
+        mouseInput.type = INPUT_MOUSE;
+        mouseInput.mi.dwFlags = MOUSEEVENTF_WHEEL;
+        mouseInput.mi.time = NULL;
+        mouseInput.mi.mouseData = (DWORD)50;
+        mouseInput.mi.dx = pos.x;
+        mouseInput.mi.dy = pos.y;
+
+        UINT uSent = SendInput(1, &mouseInput, sizeof(INPUT));
+        if (uSent != 1)
+        {
+            std::cout << "Input failed!";
+        }
+    }
+
+    __declspec (dllexport) void __stdcall Java_InputHandler_scrollDown()
+    {
+        INPUT mouseInput;
+        ZeroMemory(&mouseInput, sizeof(mouseInput));
+        POINT pos;
+        GetCursorPos(&pos);
+
+        mouseInput.type = INPUT_MOUSE;
+        mouseInput.mi.dwFlags = MOUSEEVENTF_WHEEL;
+        mouseInput.mi.time = NULL;
+        mouseInput.mi.mouseData = (DWORD)(-50);
+        mouseInput.mi.dx = pos.x;
+        mouseInput.mi.dy = pos.y;
+
+        UINT uSent = SendInput(1, &mouseInput, sizeof(INPUT));
+        if (uSent != 1)
+        {
+            std::cout << "Input failed!";
+        }
+    }
+
 }
